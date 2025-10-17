@@ -23,8 +23,10 @@ async function connectDB() {
         pool = mysql.createPool({
             ...dbConfig,
             waitForConnections: true,
-            connectionLimit: 10,
-            queueLimit: 0
+            connectionLimit: 3, // Limite reduzido de conexões
+            queueLimit: 0,
+            enableKeepAlive: true,
+            keepAliveInitialDelay: 0
         });
 
         // Testar conexão
@@ -32,10 +34,7 @@ async function connectDB() {
         console.log('Conexão com MySQL estabelecida com sucesso!');
         console.log(`Database: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`);
         
-        connection.release();
-        
-        // Criar tabelas se não existirem
-        await createTables();
+        connection.release(); // Liberar a conexão de volta para o pool
         
         return pool;
     } catch (error) {
@@ -210,17 +209,18 @@ async function createTables() {
 }
 
 // Função para obter uma conexão do pool
-function getConnection() {
+async function getConnection() {
     if (!pool) {
         throw new Error('Banco de dados não conectado. Execute connectDB() primeiro.');
     }
-    return pool;
+    return await pool.getConnection();
 }
 
 // Função para executar queries com tratamento de erro
 async function executeQuery(query, params = []) {
+    let connection;
     try {
-        const connection = getConnection();
+        connection = await pool.getConnection();
         const [results] = await connection.execute(query, params);
         return results;
     } catch (error) {
@@ -228,6 +228,9 @@ async function executeQuery(query, params = []) {
         console.error('Query:', query);
         console.error('Params:', params);
         throw error;
+    } finally {
+        // Garantir que a conexão seja sempre liberada
+        if (connection) connection.release();
     }
 }
 

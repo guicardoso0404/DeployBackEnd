@@ -191,25 +191,9 @@ async function startServer() {
         setupSocketIO(io);
         
         // Iniciar servidor
-        // httpServer.listen(PORT, () => {
-        //     console.log('\nNETWORKUP SERVER');
-        //     console.log(`Servidor rodando na porta ${PORT}`);
-        //     console.log('\nACESSAR MEU PROJETO:');
-        //     console.log(`   Página Inicial: http://localhost:${PORT}/home`);
-        //     console.log(`   Login: http://localhost:${PORT}/login`);
-        //     console.log(`   Cadastro: http://localhost:${PORT}/cadastro`);
-        //     console.log(`   Feed: http://localhost:${PORT}/feed`);
-        //     console.log(`   Chat: http://localhost:${PORT}/chat`);
-        //     console.log(`   Sobre: http://localhost:${PORT}/sobre`);
-        //     console.log('\nDESENVOLVIMENTO:');
-        //     console.log(`   API: http://localhost:${PORT}/api`);
-        //     console.log(`   Documentação: http://localhost:${PORT}/api-docs`);
-        //     console.log('\nCONTAS TESTE:');
-        //     console.log(`   Email 1: guilherme@networkup.com.br`);
-        //     console.log(`   Email 2: guilherme123@networkup.com.br`);
-        //     console.log(`   Senha: 123456 (para ambas)`);
-
-        // });
+        httpServer.listen(PORT, () => {
+            console.log(`Servidor rodando na porta ${PORT}`);
+        });
     } catch (error) {
         console.error('Erro ao iniciar servidor:', error);
         process.exit(1);
