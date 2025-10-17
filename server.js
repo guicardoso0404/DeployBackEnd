@@ -36,11 +36,11 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('../public'));
 
-// Log de requisições
-app.use((req, res, next) => {
-    console.log(`${req.method} ${req.path}`);
-    next();
-});
+// // Log de requisições
+// app.use((req, res, next) => {
+//     console.log(`${req.method} ${req.path}`);
+//     next();
+// });
 
 // ===== ROTAS DA API =====
 app.use('/api/auth', authRoutes);
@@ -55,42 +55,42 @@ app.get('/', (req, res) => {
     res.send('Api rodando! Acesse /home para a página inicial.');
 });
 
-app.get('/home', (req, res) => {
-    res.sendFile('html/home.html', { root: '../public' });
-});
+// app.get('/home', (req, res) => {
+//     res.sendFile('html/home.html', { root: '../public' });
+// });
 
-app.get('/inicial', (req, res) => {
-    res.sendFile('html/home.html', { root: '../public' });
-});
+// app.get('/inicial', (req, res) => {
+//     res.sendFile('html/home.html', { root: '../public' });
+// });
 
-app.get('/login', (req, res) => {
-    res.sendFile('html/login.html', { root: '../public' });
-});
+// app.get('/login', (req, res) => {
+//     res.sendFile('html/login.html', { root: '../public' });
+// });
 
-app.get('/cadastro', (req, res) => {
-    res.sendFile('html/cadastro.html', { root: '../public' });
-});
+// app.get('/cadastro', (req, res) => {
+//     res.sendFile('html/cadastro.html', { root: '../public' });
+// });
 
-app.get('/feed', (req, res) => {
-    res.sendFile('html/feed.html', { root: '../public' });
-});
+// app.get('/feed', (req, res) => {
+//     res.sendFile('html/feed.html', { root: '../public' });
+// });
 
-app.get('/profile', (req, res) => {
-    res.sendFile('html/profile.html', { root: '../public' });
-});
+// app.get('/profile', (req, res) => {
+//     res.sendFile('html/profile.html', { root: '../public' });
+// });
 
-app.get('/user-profile', (req, res) => {
-    res.sendFile('html/user-profile.html', { root: '../public' });
-});
+// app.get('/user-profile', (req, res) => {
+//     res.sendFile('html/user-profile.html', { root: '../public' });
+// });
 
-app.get('/sobre', (req, res) => {
-    res.sendFile('html/sobre.html', { root: '../public' });
-});
+// app.get('/sobre', (req, res) => {
+//     res.sendFile('html/sobre.html', { root: '../public' });
+// });
 
-// Rota para página de chat
-app.get('/chat', (req, res) => {
-    res.sendFile('html/chat.html', { root: '../public' });
-});
+// // Rota para página de chat
+// app.get('/chat', (req, res) => {
+//     res.sendFile('html/chat.html', { root: '../public' });
+// });
 
 // ===== ROTAS DA DOCUMENTAÇÃO =====
 
@@ -121,24 +121,24 @@ app.get('/api', (req, res) => {
     });
 });
 
-// Documentação da API (Swagger)
-app.get('/api-docs', (req, res) => {
-    res.sendFile('api-docs.html', { root: '../public' });
-});
+// // Documentação da API (Swagger)
+// app.get('/api-docs', (req, res) => {
+//     res.sendFile('api-docs.html', { root: '../public' });
+// });
 
-// Servir o arquivo swagger.json
-app.get('/swagger.json', (req, res) => {
-    res.sendFile('swagger.json', { root: '../' });
-});
+// // Servir o arquivo swagger.json
+// app.get('/swagger.json', (req, res) => {
+//     res.sendFile('swagger.json', { root: '../' });
+// });
 
-// 404 - Página não encontrada
-app.use('*', (req, res) => {
-    if (req.originalUrl.startsWith('/api/')) {
-        res.status(404).json({ success: false, message: 'Endpoint não encontrado' });
-    } else {
-        res.sendFile('html/home.html', { root: '../public' });
-    }
-});
+// // 404 - Página não encontrada
+// app.use('*', (req, res) => {
+//     if (req.originalUrl.startsWith('/api/')) {
+//         res.status(404).json({ success: false, message: 'Endpoint não encontrado' });
+//     } else {
+//         res.sendFile('html/home.html', { root: '../public' });
+//     }
+// });
 
 // ===== FUNÇÕES AUXILIARES =====
 
