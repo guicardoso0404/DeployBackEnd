@@ -3,11 +3,11 @@ const mysql = require('mysql2/promise');
 
 // Configuração da conexão com MySQL
 const dbConfig = {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'root',
-    database: process.env.DB_NAME || 'networkup_certo',
-    port: process.env.DB_PORT || 3306,
+    host: process.env.MYSQL_HOST || 'localhost',
+    user: process.env.MYSQL_USER || 'root',
+    password: process.env.MYSQL_PASSWORD || 'root',
+    database: process.env.MYSQL_DATABASE || 'networkup_certo',
+    port: process.env.MYSQL_PORT || 3306,
     charset: 'utf8mb4'
 };
 
