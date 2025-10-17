@@ -1,0 +1,38 @@
+
+{
+  "name": "networkup-backend",
+  "version": "1.0.0",
+  "description": "Backend da rede social NetworkUp para empresas de tecnologia",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "setup": "node setup-db.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "networkup",
+    "rede-social",
+    "empresas",
+    "tecnologia",
+    "nodejs",
+    "express",
+    "mysql"
+  ],
+  "author": "Guilherme Cardoso",
+  "license": "MIT",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.6.0",
+    "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
