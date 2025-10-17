@@ -52,7 +52,7 @@ app.use('/api/chat', chatRoutes);
 
 // Página inicial - redirecionar para home
 app.get('/', (req, res) => {
-    res.sendFile('html/home.html', { root: '../public' });
+    res.send('Api rodando! Acesse /home para a página inicial.');
 });
 
 app.get('/home', (req, res) => {
