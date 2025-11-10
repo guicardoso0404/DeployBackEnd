@@ -5,7 +5,12 @@ const streamifier = require('streamifier');
 // A configuração do dotenv é feita no server.js, ponto de entrada da aplicação.
 // Apenas validamos se as credenciais foram carregadas.
 if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.warn('Credenciais do Cloudinary não foram carregadas corretamente. Verifique o arquivo .env e a inicialização do servidor.');
+    console.error('❌ ERRO: Credenciais do Cloudinary não foram carregadas!');
+    console.error('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✓' : '✗');
+    console.error('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✓' : '✗');
+    console.error('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✓' : '✗');
+} else {
+    console.log('✓ Cloudinary configurado com sucesso');
 }
 
 // Configurar Cloudinary
