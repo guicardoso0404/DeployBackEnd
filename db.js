@@ -11,32 +11,39 @@ const dbConfig = {
     charset: 'utf8mb4'
 };
 
-// Pool de conexões
-let pool;
+// Função para executar queries. Cria, usa e fecha uma conexão a cada chamada.
+async function executeQuery(query, params = []) {
+    let connection;
+    try {
+        // Cria uma nova conexão para cada query
+        connection = await mysql.createConnection(dbConfig);
+        const [results] = await connection.execute(query, params);
+        return results;
+    } catch (error) {
+        console.error('Erro na query:', error.message);
+        console.error('Query:', query);
+        console.error('Params:', params);
+        throw error;
+    } finally {
+        // Garante que a conexão seja sempre fechada
+        if (connection) await connection.end();
+    }
+}
 
-// Função para conectar ao banco de dados
+// Função para conectar e inicializar o banco de dados
 async function connectDB() {
     try {
         console.log('Conectando ao banco de dados MySQL...');
         
-        // Criar pool de conexões
-        pool = mysql.createPool({
-            ...dbConfig,
-            waitForConnections: true,
-            connectionLimit: 3, // Limite reduzido de conexões
-            queueLimit: 0,
-            enableKeepAlive: true,
-            keepAliveInitialDelay: 0
-        });
-
-        // Testar conexão
-        const connection = await pool.getConnection();
+        // Testa a conexão
+        const connection = await mysql.createConnection(dbConfig);
         console.log('Conexão com MySQL estabelecida com sucesso!');
         console.log(`Database: ${dbConfig.database}@${dbConfig.host}:${dbConfig.port}`);
+        await connection.end();
         
-        connection.release(); // Liberar a conexão de volta para o pool
+        // Cria as tabelas se necessário
+        await createTables();
         
-        return pool;
     } catch (error) {
         console.error('Erro ao conectar com o banco de dados:', error.message);
         
@@ -44,21 +51,15 @@ async function connectDB() {
         if (error.code === 'ER_BAD_DB_ERROR') {
             console.log('Tentando criar o banco de dados...');
             await createDatabase();
+            await createTables();
         } else {
             console.error('Verifique se o MySQL está rodando e as configurações estão corretas');
-            console.error('Config atual:', {
-                host: dbConfig.host,
-                user: dbConfig.user,
-                database: dbConfig.database,
-                port: dbConfig.port
-            });
+            throw error;
         }
-        
-        throw error;
     }
 }
 
-// // Função para criar o banco de dados
+// Função para criar o banco de dados
 async function createDatabase() {
     try {
         const tempConfig = { ...dbConfig };
@@ -70,13 +71,7 @@ async function createDatabase() {
         await tempConnection.execute(`CREATE DATABASE IF NOT EXISTS ${dbConfig.database} CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
         console.log(`Banco de dados '${dbConfig.database}' criado com sucesso!`);
         
-        // Usar o banco de dados
-        await tempConnection.execute(`USE ${dbConfig.database}`);
-        
         await tempConnection.end();
-        
-        // Reconectar com o banco criado
-        return await connectDB();
     } catch (error) {
         console.error('Erro ao criar banco de dados:', error.message);
         throw error;
@@ -88,11 +83,14 @@ async function createTables() {
     try {
         console.log('Verificando/criando tabelas...');
         
+        // Criar uma conexão temporária para criar as tabelas
+        const connection = await mysql.createConnection(dbConfig);
+        
         // Habilitar verificação de chaves estrangeiras
-        await pool.execute(`SET FOREIGN_KEY_CHECKS = 1`);
+        await connection.execute(`SET FOREIGN_KEY_CHECKS = 1`);
         
         // Tabela de usuários (tabela principal)
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS usuarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(100) NOT NULL,
@@ -105,7 +103,7 @@ async function createTables() {
         `);
 
         // Tabela de postagens
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS postagens (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 usuario_id INT NOT NULL,
@@ -119,7 +117,7 @@ async function createTables() {
         `);
 
         // Tabela de comentários
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS comentarios (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 postagem_id INT NOT NULL,
@@ -132,7 +130,7 @@ async function createTables() {
         `);
 
         // Tabela de curtidas
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS curtidas (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 postagem_id INT NOT NULL,
@@ -145,7 +143,7 @@ async function createTables() {
         `);
         
         // Tabela de conversas (chats)
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS conversas (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 nome VARCHAR(100),
@@ -155,7 +153,7 @@ async function createTables() {
         `);
 
         // Tabela de participantes das conversas
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS participantes_conversa (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 conversa_id INT NOT NULL,
@@ -169,7 +167,7 @@ async function createTables() {
         `);
 
         // Tabela de mensagens
-        await pool.execute(`
+        await connection.execute(`
             CREATE TABLE IF NOT EXISTS mensagens (
                 id INT AUTO_INCREMENT PRIMARY KEY,
                 conversa_id INT NOT NULL,
@@ -183,7 +181,7 @@ async function createTables() {
         `);
 
         // Mostrar estatísticas do banco de dados (para log)
-        const [stats] = await pool.execute(`
+        const [stats] = await connection.execute(`
             SELECT 
                 (SELECT COUNT(*) FROM usuarios) as total_usuarios,
                 (SELECT COUNT(*) FROM postagens) as total_postagens,
@@ -202,71 +200,18 @@ async function createTables() {
         console.log(`- Total de mensagens: ${stats[0].total_mensagens || 0}`);
         console.log('Tabelas criadas/verificadas com sucesso!');
         
+        await connection.end();
+        
     } catch (error) {
         console.error('Erro ao criar tabelas:', error.message);
         throw error;
     }
 }
 
-// Função para obter uma conexão do pool
-async function getConnection() {
-    if (!pool) {
-        throw new Error('Banco de dados não conectado. Execute connectDB() primeiro.');
-    }
-    return await pool.getConnection();
-}
-
-// Função para executar queries com tratamento de erro
-async function executeQuery(query, params = []) {
-    let connection;
-    try {
-        connection = await pool.getConnection();
-        const [results] = await connection.execute(query, params);
-        return results;
-    } catch (error) {
-        console.error('Erro na query:', error.message);
-        console.error('Query:', query);
-        console.error('Params:', params);
-        throw error;
-    } finally {
-        // Garantir que a conexão seja sempre liberada
-        if (connection) connection.release();
-    }
-}
-
-
-// Função para fechar conexão com o banco de dados
-async function closeConnection() {
-    if (pool) {
-        await pool.end();
-        console.log('Conexão com banco de dados fechada');
-    }
-}
-
-// Configurar handlers para fechamento do servidor
-process.on('SIGINT', async () => {
-    console.log('\nRecebido SIGINT, fechando servidor...');
-    await closeConnection();
-    process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-    console.log('\nRecebido SIGTERM, fechando servidor...');
-    await closeConnection();
-    process.exit(0);
-});
-
-process.on('beforeExit', async () => {
-    console.log('\nEvento beforeExit recebido...');
-    await closeConnection();
-});
-
 // Exportar funções
 module.exports = {
     connectDB,
-    getConnection,
-    executeQuery,
-    closeConnection
+    executeQuery
 };
 
 //

@@ -2,10 +2,10 @@
 const { v2: cloudinary } = require('cloudinary');
 const streamifier = require('streamifier');
 
-// As variáveis de ambiente já são carregadas em server.js, que é o ponto de entrada.
-// Validar credenciais
+// A configuração do dotenv é feita no server.js, ponto de entrada da aplicação.
+// Apenas validamos se as credenciais foram carregadas.
 if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.warn('Credenciais do Cloudinary não configuradas. O upload de imagens pode não funcionar.');
+    console.warn('Credenciais do Cloudinary não foram carregadas corretamente. Verifique o arquivo .env e a inicialização do servidor.');
 }
 
 // Configurar Cloudinary
