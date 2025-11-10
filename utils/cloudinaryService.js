@@ -48,12 +48,18 @@ async function uploadFile(fileBuffer, fileName, folder = 'networkup') {
             {
                 folder: folder,
                 resource_type: 'auto',
-                public_id: fileName.split('.')[0] // Remove extensão
+                public_id: fileName.split('.')[0], // Remove extensão
+                // Passar credenciais explicitamente
+                api_key: process.env.CLOUDINARY_API_KEY,
+                api_secret: process.env.CLOUDINARY_API_SECRET,
+                cloud_name: process.env.CLOUDINARY_CLOUD_NAME
             },
             (error, result) => {
                 if (error) {
+                    console.error('Erro no upload do Cloudinary:', error);
                     reject(error);
                 } else {
+                    console.log('Upload bem-sucedido:', result.public_id);
                     resolve(result);
                 }
             }

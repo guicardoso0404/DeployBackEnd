@@ -8,6 +8,11 @@ class PostController {
         try {
             const { usuario_id, conteudo } = req.body;
             
+            console.log('=== CRIANDO POSTAGEM ===');
+            console.log('Usuario ID:', usuario_id);
+            console.log('Conteudo:', conteudo);
+            console.log('Arquivo recebido:', req.file ? 'SIM' : 'NÃO');
+            
             if (!usuario_id || (!conteudo && !req.file)) {
                 return res.json({ success: false, message: 'Usuário e conteúdo (ou imagem) são obrigatórios' });
             }
@@ -16,9 +21,22 @@ class PostController {
             
             // Se houver imagem, fazer upload para Cloudinary
             if (req.file) {
-                const fileName = `post-${usuario_id}-${Date.now()}`;
-                const uploadResult = await uploadImage(req.file.buffer, fileName, 'networkup/posts');
-                imagePublicId = uploadResult.public_id;
+                console.log('Tamanho do arquivo:', req.file.size, 'bytes');
+                console.log('Tipo do arquivo:', req.file.mimetype);
+                console.log('Iniciando upload para Cloudinary...');
+                
+                try {
+                    const fileName = `post-${usuario_id}-${Date.now()}`;
+                    const uploadResult = await uploadImage(req.file.buffer, fileName, 'networkup/posts');
+                    imagePublicId = uploadResult.public_id;
+                    console.log('Upload concluído:', imagePublicId);
+                } catch (uploadError) {
+                    console.error('Erro detalhado no upload:', uploadError);
+                    return res.json({ 
+                        success: false, 
+                        message: 'Erro ao fazer upload: ' + uploadError.message 
+                    });
+                }
             }
             
             const result = await executeQuery(

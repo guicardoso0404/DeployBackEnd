@@ -1,4 +1,12 @@
 require('dotenv').config()
+
+// Log para verificar se as variáveis de ambiente foram carregadas
+console.log('=== VARIÁVEIS DE AMBIENTE ===');
+console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✓ Carregado' : '✗ NÃO carregado');
+console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✓ Carregado' : '✗ NÃO carregado');
+console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✓ Carregado' : '✗ NÃO carregado');
+console.log('=============================\n');
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
