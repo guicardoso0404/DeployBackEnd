@@ -82,6 +82,7 @@ class PostController {
                 // Gerar URL otimizada da imagem se existir
                 if (post.imagem) {
                     post.imagem_url = getPostImageUrl(post.imagem);
+                    console.log('Post ID:', post.id, '| Imagem Public ID:', post.imagem, '| URL:', post.imagem_url);
                 }
                 
                 // Gerar URL otimizada do avatar do usuário se existir
