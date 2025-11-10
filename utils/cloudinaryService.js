@@ -1,7 +1,16 @@
 // 🦟👀
 const { v2: cloudinary } = require('cloudinary');
 const streamifier = require('streamifier');
-require('dotenv').config();
+
+// Verificar e carregar variáveis de ambiente
+if (!process.env.CLOUDINARY_CLOUD_NAME) {
+    require('dotenv').config();
+}
+
+// Validar credenciais
+if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('Credenciais do Cloudinary não configuradas. Verifique as variáveis de ambiente.');
+}
 
 // Configurar Cloudinary
 cloudinary.config({
