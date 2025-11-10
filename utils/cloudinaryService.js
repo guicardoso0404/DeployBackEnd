@@ -3,7 +3,19 @@ const { v2: cloudinary } = require('cloudinary');
 const streamifier = require('streamifier');
 
 // A configuração do dotenv é feita no server.js, ponto de entrada da aplicação.
-// Apenas validamos se as credenciais foram carregadas.
+// Função para garantir que as credenciais estejam carregadas
+function ensureCloudinaryConfig() {
+    if (!cloudinary.config().cloud_name) {
+        console.log('Configurando Cloudinary...');
+        cloudinary.config({
+            cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+            api_key: process.env.CLOUDINARY_API_KEY,
+            api_secret: process.env.CLOUDINARY_API_SECRET
+        });
+    }
+}
+
+// Verificar credenciais
 if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
     console.error('❌ ERRO: Credenciais do Cloudinary não foram carregadas!');
     console.error('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✓' : '✗');
@@ -11,14 +23,12 @@ if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !pr
     console.error('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✓' : '✗');
 } else {
     console.log('✓ Cloudinary configurado com sucesso');
+    cloudinary.config({
+        cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET
+    });
 }
-
-// Configurar Cloudinary
-cloudinary.config({
-    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-    api_key: process.env.CLOUDINARY_API_KEY,
-    api_secret: process.env.CLOUDINARY_API_SECRET
-});
 
 /**
  * Upload de arquivo para Cloudinary
@@ -28,6 +38,9 @@ cloudinary.config({
  * @returns {Promise<Object>} - Resultado do upload com URL
  */
 async function uploadFile(fileBuffer, fileName, folder = 'networkup') {
+    // Garantir que o Cloudinary esteja configurado antes do upload
+    ensureCloudinaryConfig();
+    
     return new Promise((resolve, reject) => {
         const stream = streamifier.createReadStream(fileBuffer);
         
