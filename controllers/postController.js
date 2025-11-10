@@ -1,5 +1,6 @@
 // 🦟👀
 const { executeQuery } = require('../db');
+const { uploadImage, getPostImageUrl, deleteFile } = require('../utils/cloudinaryService');
 
 class PostController {
     // Criar postagem
@@ -11,12 +12,18 @@ class PostController {
                 return res.json({ success: false, message: 'Usuário e conteúdo (ou imagem) são obrigatórios' });
             }
             
-            // Caminho da imagem se foi enviada
-            const imagePath = req.file ? `/uploads/posts/${req.file.filename}` : null;
+            let imagePublicId = null;
+            
+            // Se houver imagem, fazer upload para Cloudinary
+            if (req.file) {
+                const fileName = `post-${usuario_id}-${Date.now()}`;
+                const uploadResult = await uploadImage(req.file.buffer, fileName, 'networkup/posts');
+                imagePublicId = uploadResult.public_id;
+            }
             
             const result = await executeQuery(
                 'INSERT INTO postagens (usuario_id, conteudo, imagem) VALUES (?, ?, ?)', 
-                [usuario_id, conteudo || '', imagePath]
+                [usuario_id, conteudo || '', imagePublicId]
             );
             
             console.log('Postagem criada:', result.insertId);
@@ -24,12 +31,18 @@ class PostController {
             res.json({
                 success: true,
                 message: 'Postagem criada com sucesso!',
-                data: { id: result.insertId, usuario_id, conteudo, imagem: imagePath }
+                data: { 
+                    id: result.insertId, 
+                    usuario_id, 
+                    conteudo, 
+                    imagem: imagePublicId,
+                    imagem_url: imagePublicId ? getPostImageUrl(imagePublicId) : null
+                }
             });
             
         } catch (error) {
             console.error('Erro ao criar postagem:', error);
-            res.json({ success: false, message: 'Erro interno do servidor' });
+            res.json({ success: false, message: 'Erro ao criar postagem: ' + error.message });
         }
     }
 
@@ -46,8 +59,18 @@ class PostController {
                 LIMIT 20
             `);
             
-            // Buscar comentários para cada post
+            // Buscar comentários para cada post e gerar URLs otimizadas
             for (let post of posts) {
+                // Gerar URL otimizada da imagem se existir
+                if (post.imagem) {
+                    post.imagem_url = getPostImageUrl(post.imagem);
+                }
+                
+                // Gerar URL otimizada do avatar do usuário se existir
+                if (post.foto_perfil) {
+                    post.foto_perfil_url = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,g_face,h_50,w_50,f_auto,q_auto/${post.foto_perfil}`;
+                }
+                
                 const comments = await executeQuery(`
                     SELECT 
                         c.id, c.conteudo, c.data_criacao as created_at,
@@ -58,6 +81,13 @@ class PostController {
                     ORDER BY c.data_criacao ASC
                     LIMIT 3
                 `, [post.id]);
+                
+                // Gerar URLs para comentários também
+                for (let comment of comments) {
+                    if (comment.foto_perfil) {
+                        comment.foto_perfil_url = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,g_face,h_50,w_50,f_auto,q_auto/${comment.foto_perfil}`;
+                    }
+                }
                 
                 post.comentarios_lista = comments;
             }
@@ -173,6 +203,15 @@ class PostController {
             
             if (!isOwner && !isAdmin) {
                 return res.json({ success: false, message: 'Você não tem permissão para deletar este post' });
+            }
+            
+            // Deletar imagem do Cloudinary se existir
+            if (post[0].imagem) {
+                try {
+                    await deleteFile(post[0].imagem);
+                } catch (err) {
+                    console.log('Não foi possível deletar imagem:', err.message);
+                }
             }
             
             // Deletar comentários primeiro

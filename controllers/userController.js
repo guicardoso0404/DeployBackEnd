@@ -1,5 +1,6 @@
 // 🦟👀
 const { executeQuery } = require('../db');
+const { uploadImage, getAvatarUrl, deleteFile } = require('../utils/cloudinaryService');
 
 class UserController {
     // Atualizar usuário
@@ -62,23 +63,42 @@ class UserController {
                 return res.json({ success: false, message: 'Usuário e arquivo são obrigatórios' });
             }
             
-            // Caminho da imagem
-            const avatarPath = `/uploads/profiles/${req.file.filename}`;
+            // Gerar nome único para o arquivo
+            const fileName = `avatar-${usuario_id}-${Date.now()}`;
             
-            // Atualizar banco de dados
-            await executeQuery('UPDATE usuarios SET foto_perfil = ? WHERE id = ?', [avatarPath, usuario_id]);
+            // Upload para Cloudinary
+            const uploadResult = await uploadImage(req.file.buffer, fileName, 'networkup/profiles');
+            
+            // Obter avatar anterior
+            const userResult = await executeQuery('SELECT foto_perfil FROM usuarios WHERE id = ?', [usuario_id]);
+            const oldPhotoId = userResult[0]?.foto_perfil;
+            
+            // Atualizar banco de dados com public_id do Cloudinary
+            await executeQuery('UPDATE usuarios SET foto_perfil = ? WHERE id = ?', [uploadResult.public_id, usuario_id]);
+            
+            // Deletar foto antiga se existir
+            if (oldPhotoId && oldPhotoId !== null) {
+                try {
+                    await deleteFile(oldPhotoId);
+                } catch (err) {
+                    console.log('Não foi possível deletar foto anterior:', err.message);
+                }
+            }
             
             console.log('Avatar atualizado para usuário:', usuario_id);
             
             res.json({
                 success: true,
                 message: 'Foto de perfil atualizada com sucesso!',
-                data: { foto_perfil: avatarPath }
+                data: { 
+                    foto_perfil: uploadResult.public_id,
+                    foto_perfil_url: getAvatarUrl(uploadResult.public_id)
+                }
             });
             
         } catch (error) {
             console.error('Erro ao fazer upload do avatar:', error);
-            res.json({ success: false, message: 'Erro interno do servidor' });
+            res.json({ success: false, message: 'Erro ao fazer upload: ' + error.message });
         }
     }
 
@@ -99,6 +119,11 @@ class UserController {
             }
             
             const user = users[0];
+            
+            // Gerar URL otimizada do avatar se existir
+            if (user.foto_perfil) {
+                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
+            }
             
             // Buscar posts do usuário
             const posts = await executeQuery(`
