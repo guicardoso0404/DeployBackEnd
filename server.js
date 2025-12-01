@@ -31,7 +31,9 @@ const io = new Server(httpServer, {
             "http://127.0.0.1:3002",
             "http://127.0.0.1:3000",
             "http://networkup.local:3002",
-            "http://networkup.local:3000"
+            "http://networkup.local:3000",
+            "https://deploy-frontend-woad-nine.vercel.app",
+            "https://deploy-back-end-chi.vercel.app"
         ],
         methods: ["GET", "POST"],
         credentials: true
@@ -40,7 +42,17 @@ const io = new Server(httpServer, {
 const PORT = 3002;
 
 // Middleware básico
-app.use(cors());
+app.use(cors({
+    origin: [
+        "http://localhost:3002", 
+        "http://localhost:3000", 
+        "http://127.0.0.1:3002",
+        "http://127.0.0.1:3000",
+        "https://deploy-frontend-woad-nine.vercel.app",
+        "https://deploy-back-end-chi.vercel.app"
+    ],
+    credentials: true
+}));
 app.use(express.json());
 app.use(express.static('../public'));
 

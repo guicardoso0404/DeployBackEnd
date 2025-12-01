@@ -98,9 +98,23 @@ async function createTables() {
                 senha VARCHAR(255) NOT NULL,
                 descricao TEXT,
                 foto_perfil TEXT,
+                google_id VARCHAR(255),
                 data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
+        
+        // Adicionar coluna google_id se não existir (para bancos existentes)
+        try {
+            await connection.execute(`
+                ALTER TABLE usuarios ADD COLUMN google_id VARCHAR(255)
+            `);
+            console.log('Coluna google_id adicionada com sucesso!');
+        } catch (alterError) {
+            // Ignora se a coluna já existir
+            if (!alterError.message.includes('Duplicate column')) {
+                // Se for outro erro, apenas loga
+            }
+        }
 
         // Tabela de postagens
         await connection.execute(`
