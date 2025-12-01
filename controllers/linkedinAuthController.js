@@ -1,4 +1,4 @@
-// Controller para autenticação com LinkedIn OAuth 2.0
+// Controller para autenticação com LinkedIn OAuth 2.0 v2
 const { executeQuery } = require('../db');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
@@ -6,8 +6,9 @@ const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-n
 class LinkedInAuthController {
     
     // Redireciona o usuário para a página de login do LinkedIn
-    static async redirectToLinkedIn(req, res) {
+    static redirectToLinkedIn(req, res) {
         try {
+            console.log('=== INICIANDO LINKEDIN AUTH ===');
             const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
             const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'https://deploy-back-end-chi.vercel.app/api/auth/linkedin/callback';
             
