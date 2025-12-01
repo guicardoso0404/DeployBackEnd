@@ -1,10 +1,6 @@
 // Controller para autenticação com LinkedIn OAuth 2.0
 const { executeQuery } = require('../db');
 
-// URLs de configuração
-const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
-const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
-const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'https://deploy-back-end-chi.vercel.app/api/auth/linkedin/callback';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
 
 class LinkedInAuthController {
@@ -12,6 +8,14 @@ class LinkedInAuthController {
     // Redireciona o usuário para a página de login do LinkedIn
     static async redirectToLinkedIn(req, res) {
         try {
+            const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
+            const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'https://deploy-back-end-chi.vercel.app/api/auth/linkedin/callback';
+            
+            if (!LINKEDIN_CLIENT_ID) {
+                console.error('LINKEDIN_CLIENT_ID não configurado!');
+                return res.redirect(`${FRONTEND_URL}/html/login.html?error=linkedin_not_configured`);
+            }
+            
             const scope = encodeURIComponent('openid profile email');
             const redirectUri = encodeURIComponent(LINKEDIN_REDIRECT_URI);
             const state = Math.random().toString(36).substring(7);
@@ -24,6 +28,7 @@ class LinkedInAuthController {
                 `scope=${scope}`;
             
             console.log('Redirecionando para LinkedIn OAuth...');
+            console.log('Client ID:', LINKEDIN_CLIENT_ID);
             res.redirect(linkedinAuthUrl);
             
         } catch (error) {
@@ -35,6 +40,10 @@ class LinkedInAuthController {
     // Callback do LinkedIn - recebe o código e troca por token
     static async linkedinCallback(req, res) {
         try {
+            const LINKEDIN_CLIENT_ID = process.env.LINKEDIN_CLIENT_ID;
+            const LINKEDIN_CLIENT_SECRET = process.env.LINKEDIN_CLIENT_SECRET;
+            const LINKEDIN_REDIRECT_URI = process.env.LINKEDIN_REDIRECT_URI || 'https://deploy-back-end-chi.vercel.app/api/auth/linkedin/callback';
+            
             const { code, error, error_description } = req.query;
             
             // Se o usuário cancelou ou houve erro
