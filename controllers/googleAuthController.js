@@ -1,6 +1,7 @@
 // 🦟👀
 // Controller para autenticação com Google OAuth 2.0
 const { executeQuery } = require('../db');
+const { getAvatarUrl } = require('../utils/cloudinaryService');
 
 // URLs de configuração
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
@@ -186,6 +187,13 @@ class GoogleAuthController {
             
             // Remover senha da resposta
             delete user.senha;
+            
+            // Gerar URL da foto de perfil se for um public_id do Cloudinary
+            if (user.foto_perfil && !user.foto_perfil.startsWith('http')) {
+                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
+            } else if (user.foto_perfil) {
+                user.foto_perfil_url = user.foto_perfil;
+            }
             
             // Redirecionar para o frontend com os dados do usuário
             // Usamos base64 para passar os dados de forma segura na URL

@@ -1,5 +1,6 @@
 // 🦟👀
 const { executeQuery } = require('../db');
+const { getAvatarUrl } = require('../utils/cloudinaryService');
 
 class AuthController {
     // Cadastrar novo usuário
@@ -68,6 +69,11 @@ class AuthController {
             
             console.log('Login sucesso:', { id: user.id, nome: user.nome, email: user.email });
             delete user.senha; // Remover senha da resposta
+            
+            // Gerar URL da foto de perfil se existir
+            if (user.foto_perfil) {
+                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
+            }
             
             res.json({
                 success: true,

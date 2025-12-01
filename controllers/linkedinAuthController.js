@@ -1,5 +1,6 @@
 // Controller para autenticação com LinkedIn OAuth 2.0 v2
 const { executeQuery } = require('../db');
+const { getAvatarUrl } = require('../utils/cloudinaryService');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
 
@@ -200,6 +201,13 @@ class LinkedInAuthController {
             
             // Remover senha da resposta
             delete user.senha;
+            
+            // Gerar URL da foto de perfil se for um public_id do Cloudinary
+            if (user.foto_perfil && !user.foto_perfil.startsWith('http')) {
+                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
+            } else if (user.foto_perfil) {
+                user.foto_perfil_url = user.foto_perfil;
+            }
             
             // Redirecionar para o frontend com os dados do usuário
             const userData = Buffer.from(JSON.stringify({
