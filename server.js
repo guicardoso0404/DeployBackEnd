@@ -5,6 +5,8 @@ console.log('=== VARIÁVEIS DE AMBIENTE ===');
 console.log('CLOUDINARY_CLOUD_NAME:', process.env.CLOUDINARY_CLOUD_NAME ? '✓ Carregado' : '✗ NÃO carregado');
 console.log('CLOUDINARY_API_KEY:', process.env.CLOUDINARY_API_KEY ? '✓ Carregado' : '✗ NÃO carregado');
 console.log('CLOUDINARY_API_SECRET:', process.env.CLOUDINARY_API_SECRET ? '✓ Carregado' : '✗ NÃO carregado');
+console.log('GOOGLE_CLIENT_ID:', process.env.GOOGLE_CLIENT_ID ? '✓ Carregado' : '✗ NÃO carregado');
+console.log('LINKEDIN_CLIENT_ID:', process.env.LINKEDIN_CLIENT_ID ? '✓ Carregado' : '✗ NÃO carregado');
 console.log('=============================\n');
 
 const express = require('express');
@@ -113,6 +115,17 @@ app.get('/', (req, res) => {
 // });
 
 // ===== ROTAS DA DOCUMENTAÇÃO =====
+
+// Debug - verificar variáveis de ambiente
+app.get('/api/debug/env', (req, res) => {
+    res.json({
+        LINKEDIN_CLIENT_ID: process.env.LINKEDIN_CLIENT_ID ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+        LINKEDIN_CLIENT_SECRET: process.env.LINKEDIN_CLIENT_SECRET ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+        LINKEDIN_REDIRECT_URI: process.env.LINKEDIN_REDIRECT_URI ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+        GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+        CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'CONFIGURADO' : 'NÃO CONFIGURADO'
+    });
+});
 
 // Info da API
 app.get('/api', (req, res) => {
