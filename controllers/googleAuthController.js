@@ -1,3 +1,4 @@
+// 🦟👀
 // Controller para autenticação com Google OAuth 2.0
 const { executeQuery } = require('../db');
 
@@ -96,21 +97,36 @@ class GoogleAuthController {
             
             // Verificar se usuário já existe no banco
             let user;
-            const existingUsers = await executeQuery(
-                'SELECT * FROM usuarios WHERE email = ? OR google_id = ?', 
-                [googleUser.email, googleUser.id]
-            );
+            let existingUsers;
+            
+            try {
+                existingUsers = await executeQuery(
+                    'SELECT * FROM usuarios WHERE email = ? OR google_id = ?', 
+                    [googleUser.email, googleUser.id]
+                );
+            } catch (dbError) {
+                // Se a coluna google_id não existir, buscar só por email
+                console.log('Coluna google_id pode não existir, buscando só por email...');
+                existingUsers = await executeQuery(
+                    'SELECT * FROM usuarios WHERE email = ?', 
+                    [googleUser.email]
+                );
+            }
             
             if (existingUsers.length > 0) {
                 // Usuário já existe - fazer login
                 user = existingUsers[0];
                 
                 // Atualizar google_id se ainda não tiver
-                if (!user.google_id) {
-                    await executeQuery(
-                        'UPDATE usuarios SET google_id = ? WHERE id = ?',
-                        [googleUser.id, user.id]
-                    );
+                try {
+                    if (!user.google_id) {
+                        await executeQuery(
+                            'UPDATE usuarios SET google_id = ? WHERE id = ?',
+                            [googleUser.id, user.id]
+                        );
+                    }
+                } catch (e) {
+                    console.log('Não foi possível atualizar google_id:', e.message);
                 }
                 
                 // Atualizar foto se não tiver e o Google fornecer
@@ -126,16 +142,31 @@ class GoogleAuthController {
                 
             } else {
                 // Usuário novo - criar conta
-                const result = await executeQuery(`
-                    INSERT INTO usuarios (nome, email, senha, google_id, foto_perfil)
-                    VALUES (?, ?, ?, ?, ?)
-                `, [
-                    googleUser.name || googleUser.email.split('@')[0],
-                    googleUser.email,
-                    'google_oauth_' + googleUser.id, // Senha placeholder para login Google
-                    googleUser.id,
-                    googleUser.picture || null
-                ]);
+                let result;
+                try {
+                    result = await executeQuery(`
+                        INSERT INTO usuarios (nome, email, senha, google_id, foto_perfil)
+                        VALUES (?, ?, ?, ?, ?)
+                    `, [
+                        googleUser.name || googleUser.email.split('@')[0],
+                        googleUser.email,
+                        'google_oauth_' + googleUser.id,
+                        googleUser.id,
+                        googleUser.picture || null
+                    ]);
+                } catch (insertError) {
+                    // Se falhar (coluna google_id não existe), tentar sem google_id
+                    console.log('Tentando inserir sem google_id...');
+                    result = await executeQuery(`
+                        INSERT INTO usuarios (nome, email, senha, foto_perfil)
+                        VALUES (?, ?, ?, ?)
+                    `, [
+                        googleUser.name || googleUser.email.split('@')[0],
+                        googleUser.email,
+                        'google_oauth_' + googleUser.id,
+                        googleUser.picture || null
+                    ]);
+                }
                 
                 user = {
                     id: result.insertId,
