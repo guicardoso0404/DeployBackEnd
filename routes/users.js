@@ -4,6 +4,9 @@ const router = express.Router();
 const UserController = require('../controllers/userController');
 const { profileUpload } = require('../middleware/upload');
 
+// Rota para listar todos os usuários (GET /api/users)
+router.get('/', UserController.listAll);
+
 // Rotas de usuários
 router.put('/update', UserController.update);
 router.post('/upload-avatar', profileUpload.single('avatar'), UserController.uploadAvatar);

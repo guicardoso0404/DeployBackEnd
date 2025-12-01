@@ -3,6 +3,42 @@ const { executeQuery } = require('../db');
 const { uploadImage, getAvatarUrl, deleteFile } = require('../utils/cloudinaryService');
 
 class UserController {
+    // Listar todos os usuários (para o painel admin)
+    static async listAll(req, res) {
+        try {
+            const users = await executeQuery(`
+                SELECT 
+                    u.id, 
+                    u.nome, 
+                    u.email, 
+                    u.descricao,
+                    u.foto_perfil,
+                    u.role,
+                    u.status,
+                    u.data_criacao as created_at,
+                    (SELECT COUNT(*) FROM postagens WHERE usuario_id = u.id) as total_posts
+                FROM usuarios u
+                ORDER BY u.data_criacao DESC
+            `);
+            
+            // Adicionar URL da foto de perfil
+            users.forEach(user => {
+                if (user.foto_perfil) {
+                    user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
+                }
+            });
+            
+            res.json({
+                success: true,
+                data: users
+            });
+            
+        } catch (error) {
+            console.error('Erro ao listar usuários:', error);
+            res.json({ success: false, message: 'Erro interno do servidor' });
+        }
+    }
+
     // Atualizar usuário
     static async update(req, res) {
         try {
