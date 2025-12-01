@@ -131,6 +131,12 @@ class LinkedInAuthController {
                 // Usuário já existe - fazer login
                 user = existingUsers[0];
                 
+                // Verificar se usuário está banido
+                if (user.status === 'banido') {
+                    console.log('Login LinkedIn bloqueado - usuário banido:', user.email);
+                    return res.redirect(`${FRONTEND_URL}/html/login.html?error=user_banned`);
+                }
+                
                 // Atualizar linkedin_id se ainda não tiver
                 try {
                     if (!user.linkedin_id) {

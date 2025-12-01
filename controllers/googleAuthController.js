@@ -117,6 +117,12 @@ class GoogleAuthController {
                 // Usuário já existe - fazer login
                 user = existingUsers[0];
                 
+                // Verificar se usuário está banido
+                if (user.status === 'banido') {
+                    console.log('Login Google bloqueado - usuário banido:', user.email);
+                    return res.redirect(`${FRONTEND_URL}/html/login.html?error=user_banned`);
+                }
+                
                 // Atualizar google_id se ainda não tiver
                 try {
                     if (!user.google_id) {

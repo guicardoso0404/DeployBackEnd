@@ -56,6 +56,16 @@ class AuthController {
             }
             
             const user = users[0];
+            
+            // Verificar se usuário está banido
+            if (user.status === 'banido') {
+                console.log('Login bloqueado - usuário banido:', email);
+                return res.json({ 
+                    success: false, 
+                    message: 'Sua conta foi suspensa. Entre em contato com o suporte.' 
+                });
+            }
+            
             console.log('Login sucesso:', { id: user.id, nome: user.nome, email: user.email });
             delete user.senha; // Remover senha da resposta
             
