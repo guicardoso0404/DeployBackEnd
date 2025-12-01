@@ -99,6 +99,8 @@ async function createTables() {
                 descricao TEXT,
                 foto_perfil TEXT,
                 google_id VARCHAR(255),
+                role ENUM('user', 'admin') DEFAULT 'user',
+                status ENUM('ativo', 'banido', 'inativo') DEFAULT 'ativo',
                 data_criacao TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         `);
@@ -124,6 +126,36 @@ async function createTables() {
             console.log('Coluna linkedin_id adicionada com sucesso!');
         } catch (alterError) {
             // Ignora se a coluna já existir
+        }
+
+        // Adicionar coluna role se não existir (para bancos existentes)
+        try {
+            await connection.execute(`
+                ALTER TABLE usuarios ADD COLUMN role ENUM('user', 'admin') DEFAULT 'user'
+            `);
+            console.log('Coluna role adicionada com sucesso!');
+        } catch (alterError) {
+            // Ignora se a coluna já existir
+        }
+        
+        // Adicionar coluna status se não existir (para bancos existentes)
+        try {
+            await connection.execute(`
+                ALTER TABLE usuarios ADD COLUMN status ENUM('ativo', 'banido', 'inativo') DEFAULT 'ativo'
+            `);
+            console.log('Coluna status adicionada com sucesso!');
+        } catch (alterError) {
+            // Ignora se a coluna já existir
+        }
+        
+        // Garantir que o admin principal tenha role = 'admin'
+        try {
+            await connection.execute(`
+                UPDATE usuarios SET role = 'admin' WHERE email = 'guilherme@networkup.com.br'
+            `);
+            console.log('Admin principal configurado!');
+        } catch (alterError) {
+            console.log('Erro ao configurar admin principal:', alterError.message);
         }
 
         // Tabela de postagens

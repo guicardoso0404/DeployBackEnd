@@ -22,6 +22,7 @@ const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const chatRoutes = require('./routes/chat');
+const adminRoutes = require('./routes/admin');
 
 const app = express();
 const httpServer = createServer(app);
@@ -69,6 +70,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/admin', adminRoutes);
 
 // ===== ROTAS FRONTEND =====
 
@@ -149,7 +151,15 @@ app.get('/api', (req, res) => {
             'GET /api/chat/conversas/:usuarioId': 'Obter conversas do usuário',
             'GET /api/chat/mensagens/:conversaId': 'Obter mensagens de uma conversa',
             'POST /api/chat/conversas/criar': 'Criar nova conversa',
-            'GET /api/chat/usuarios/buscar': 'Buscar usuários para conversa'
+            'GET /api/chat/usuarios/buscar': 'Buscar usuários para conversa',
+            'GET /api/admin/stats': 'Estatísticas do sistema (somente admin)',
+            'GET /api/admin/users': 'Listar todos os usuários (somente admin)',
+            'GET /api/admin/users/:userId': 'Detalhes de um usuário (somente admin)',
+            'POST /api/admin/users/:userId/ban': 'Banir usuário (somente admin)',
+            'POST /api/admin/users/:userId/unban': 'Desbanir usuário (somente admin)',
+            'POST /api/admin/users/:userId/promote': 'Promover para admin (somente admin)',
+            'POST /api/admin/users/:userId/demote': 'Rebaixar de admin (somente admin)',
+            'DELETE /api/admin/posts/:postId': 'Deletar postagem como admin (somente admin)'
         }
     });
 });
