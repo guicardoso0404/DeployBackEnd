@@ -1,5 +1,6 @@
 // 🦟👀
 const { executeQuery } = require('../db');
+const pusher = require('../utils/pusherService');
 
 class ChatController {
     // Obter conversas do usuário
@@ -241,6 +242,109 @@ class ChatController {
         } catch (error) {
             console.error('Erro ao buscar usuários:', error);
             res.json({ success: false, message: 'Erro interno do servidor' });
+        }
+    }
+
+    // Enviar mensagem (com Pusher para tempo real)
+    static async sendMessage(req, res) {
+        try {
+            const { conversaId, usuarioId, conteudo } = req.body;
+            
+            if (!conversaId || !usuarioId || !conteudo) {
+                return res.json({ success: false, message: 'Dados insuficientes para enviar mensagem' });
+            }
+            
+            // Verificar se o usuário é participante da conversa
+            const participante = await executeQuery(`
+                SELECT id FROM participantes_conversa
+                WHERE conversa_id = ? AND usuario_id = ? AND status = 'ativo'
+            `, [conversaId, usuarioId]);
+            
+            if (participante.length === 0) {
+                return res.json({ success: false, message: 'Você não tem acesso a esta conversa' });
+            }
+            
+            // Inserir mensagem no banco
+            const result = await executeQuery(`
+                INSERT INTO mensagens (conversa_id, usuario_id, conteudo)
+                VALUES (?, ?, ?)
+            `, [conversaId, usuarioId, conteudo]);
+            
+            // Buscar dados do usuário que enviou
+            const usuario = await executeQuery(`
+                SELECT id, nome, foto_perfil FROM usuarios WHERE id = ?
+            `, [usuarioId]);
+            
+            const mensagem = {
+                id: result.insertId,
+                conversa_id: conversaId,
+                usuario_id: usuarioId,
+                usuario_nome: usuario[0]?.nome,
+                foto_perfil: usuario[0]?.foto_perfil,
+                conteudo: conteudo,
+                data_envio: new Date().toISOString(),
+                status: 'enviada'
+            };
+            
+            // Enviar mensagem em tempo real via Pusher
+            await pusher.trigger(`chat-${conversaId}`, 'nova-mensagem', mensagem);
+            
+            res.json({
+                success: true,
+                message: 'Mensagem enviada com sucesso',
+                data: mensagem
+            });
+            
+        } catch (error) {
+            console.error('Erro ao enviar mensagem:', error);
+            res.json({ success: false, message: 'Erro interno do servidor' });
+        }
+    }
+
+    // Marcar mensagens como lidas
+    static async markAsRead(req, res) {
+        try {
+            const { conversaId, usuarioId } = req.body;
+            
+            if (!conversaId || !usuarioId) {
+                return res.json({ success: false, message: 'Dados insuficientes' });
+            }
+            
+            await executeQuery(`
+                UPDATE mensagens
+                SET status = 'lida'
+                WHERE conversa_id = ? AND usuario_id != ? AND status = 'enviada'
+            `, [conversaId, usuarioId]);
+            
+            // Notificar via Pusher que as mensagens foram lidas
+            await pusher.trigger(`chat-${conversaId}`, 'mensagens-lidas', {
+                conversa_id: conversaId,
+                lido_por: usuarioId
+            });
+            
+            res.json({ success: true, message: 'Mensagens marcadas como lidas' });
+            
+        } catch (error) {
+            console.error('Erro ao marcar mensagens como lidas:', error);
+            res.json({ success: false, message: 'Erro interno do servidor' });
+        }
+    }
+
+    // Notificar digitando
+    static async typing(req, res) {
+        try {
+            const { conversaId, usuarioId, usuarioNome } = req.body;
+            
+            await pusher.trigger(`chat-${conversaId}`, 'digitando', {
+                usuario_id: usuarioId,
+                usuario_nome: usuarioNome
+            });
+            
+            res.json({ success: true });
+            
+        } catch (error) {
+            console.error('Erro ao notificar digitando:', error);
+            res.json({ success: false });
         }
     }
 }
