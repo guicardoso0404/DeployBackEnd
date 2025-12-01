@@ -115,7 +115,7 @@ class PostController {
             
         } catch (error) {
             console.error('Erro ao obter feed:', error);
-            res.json({ success: false, message: 'Erro interno do servidor' });
+            res.json({ success: false, message: 'Erro interno do servidor: ' + error.message });
         }
     }
 
