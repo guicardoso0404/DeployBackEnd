@@ -115,6 +115,16 @@ async function createTables() {
                 // Se for outro erro, apenas loga
             }
         }
+        
+        // Adicionar coluna linkedin_id se não existir (para bancos existentes)
+        try {
+            await connection.execute(`
+                ALTER TABLE usuarios ADD COLUMN linkedin_id VARCHAR(255)
+            `);
+            console.log('Coluna linkedin_id adicionada com sucesso!');
+        } catch (alterError) {
+            // Ignora se a coluna já existir
+        }
 
         // Tabela de postagens
         await connection.execute(`
