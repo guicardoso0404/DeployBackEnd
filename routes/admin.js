@@ -14,7 +14,9 @@ router.get('/stats', AdminController.getStats);
 router.get('/users', AdminController.listAllUsers);
 router.get('/users/:userId', AdminController.getUserDetails);
 router.post('/users/:userId/ban', AdminController.banUser);
+router.put('/users/:userId/ban', AdminController.banUser);
 router.post('/users/:userId/unban', AdminController.unbanUser);
+router.put('/users/:userId/unban', AdminController.unbanUser);
 router.post('/users/:userId/promote', AdminController.promoteToAdmin);
 router.post('/users/:userId/demote', AdminController.demoteFromAdmin);
 

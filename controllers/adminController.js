@@ -103,7 +103,12 @@ class AdminController {
     static async banUser(req, res) {
         try {
             const { userId } = req.params;
-            const { motivo } = req.body;
+            const { motivo, status } = req.body;
+            
+            // Se o frontend enviou status = 'ativo', redirecionar para unban
+            if (status === 'ativo') {
+                return AdminController.unbanUser(req, res);
+            }
             
             if (!userId) {
                 return res.status(400).json({ 
