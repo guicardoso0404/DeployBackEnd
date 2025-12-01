@@ -17,4 +17,13 @@ router.get('/google/callback', GoogleAuthController.googleCallback);
 router.get('/linkedin', LinkedInAuthController.redirectToLinkedIn);
 router.get('/linkedin/callback', LinkedInAuthController.linkedinCallback);
 
+// Teste LinkedIn
+router.get('/linkedin/test', (req, res) => {
+    res.json({
+        message: 'Rota LinkedIn funcionando!',
+        client_id: process.env.LINKEDIN_CLIENT_ID ? 'OK' : 'FALTANDO',
+        redirect_uri: process.env.LINKEDIN_REDIRECT_URI || 'usando padrão'
+    });
+});
+
 module.exports = router;
