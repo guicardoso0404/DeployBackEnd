@@ -42,7 +42,8 @@ class UserController {
     // Atualizar usuário
     static async update(req, res) {
         try {
-            const { usuario_id, nome, email, senha, descricao } = req.body;
+            const { nome, email, senha, descricao } = req.body;
+            const usuario_id = req.user?.id;
             
             if (!usuario_id || !nome || !email) {
                 return res.json({ success: false, message: 'ID do usuário, nome e email são obrigatórios' });
@@ -93,7 +94,7 @@ class UserController {
     // Upload de avatar
     static async uploadAvatar(req, res) {
         try {
-            const { usuario_id } = req.body;
+            const usuario_id = req.user?.id;
             
             if (!usuario_id || !req.file) {
                 return res.json({ success: false, message: 'Usuário e arquivo são obrigatórios' });
@@ -194,13 +195,7 @@ class UserController {
     // Buscar usuário por email (admin only)
     static async findByEmail(req, res) {
         try {
-            const requestEmail = req.headers['user-email'];
             const email = req.params.email;
-            
-            // Verificar se o solicitante é admin (contém "guilherme" no email)
-            if (!requestEmail || !requestEmail.includes('guilherme')) {
-                return res.json({ success: false, message: 'Acesso negado' });
-            }
             
             const users = await executeQuery('SELECT id, nome, email, descricao, foto_perfil FROM usuarios WHERE email = ?', [email]);
             
@@ -222,13 +217,6 @@ class UserController {
     // Listar usuários (admin only)
     static async list(req, res) {
         try {
-            const requestEmail = req.headers['user-email'];
-            
-            // Verificar se o solicitante é admin (contém "guilherme" no email)
-            if (!requestEmail || !requestEmail.includes('guilherme')) {
-                return res.json({ success: false, message: 'Acesso negado' });
-            }
-            
             const users = await executeQuery(`
                 SELECT id, nome, email, descricao, foto_perfil, 
                        DATE_FORMAT(data_criacao, '%d/%m/%Y %H:%i') as data_criacao 

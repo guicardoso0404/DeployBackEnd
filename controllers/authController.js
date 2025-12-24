@@ -1,6 +1,7 @@
 // 🦟👀
 const { executeQuery } = require('../db');
 const { getAvatarUrl } = require('../utils/cloudinaryService');
+const jwt = require('jsonwebtoken');
 
 class AuthController {
     // Cadastrar novo usuário
@@ -69,16 +70,30 @@ class AuthController {
             
             console.log('Login sucesso:', { id: user.id, nome: user.nome, email: user.email });
             delete user.senha; // Remover senha da resposta
+
+            if (!process.env.JWT_SECRET) {
+                return res.status(500).json({
+                    success: false,
+                    message: 'JWT_SECRET não configurado no servidor'
+                });
+            }
             
             // Gerar URL da foto de perfil se existir
             if (user.foto_perfil) {
                 user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
             }
+
+            const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+            const accessToken = jwt.sign(
+                { role: user.role || 'user' },
+                process.env.JWT_SECRET,
+                { subject: String(user.id), expiresIn }
+            );
             
             res.json({
                 success: true,
                 message: 'Login realizado com sucesso!',
-                data: { usuario: user, redirectTo: '/feed' }
+                data: { usuario: user, accessToken, tokenType: 'Bearer', expiresIn, redirectTo: '/feed' }
             });
             
         } catch (error) {

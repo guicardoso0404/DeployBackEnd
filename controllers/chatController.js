@@ -6,10 +6,16 @@ class ChatController {
     // Obter conversas do usuário
     static async getConversations(req, res) {
         try {
-            const usuarioId = req.params.usuarioId;
+            const usuarioId = req.user?.id;
+            const usuarioIdParam = req.params.usuarioId;
             
             if (!usuarioId) {
                 return res.json({ success: false, message: 'ID do usuário é obrigatório' });
+            }
+
+            // Se o cliente mandar um id diferente, negar (evita leitura de terceiros)
+            if (usuarioIdParam && Number(usuarioIdParam) !== Number(usuarioId)) {
+                return res.status(403).json({ success: false, message: 'Acesso negado' });
             }
             
             // Buscar conversas em que o usuário é participante
@@ -101,7 +107,7 @@ class ChatController {
     static async getMessages(req, res) {
         try {
             const conversaId = req.params.conversaId;
-            const usuarioId = req.query.usuarioId;
+            const usuarioId = req.user?.id;
             
             if (!conversaId || !usuarioId) {
                 return res.json({ success: false, message: 'ID da conversa e do usuário são obrigatórios' });
@@ -153,7 +159,8 @@ class ChatController {
     // Criar nova conversa
     static async createConversation(req, res) {
         try {
-            const { usuarioId, outroUsuarioId, tipo, nome } = req.body;
+            const { outroUsuarioId, tipo, nome } = req.body;
+            const usuarioId = req.user?.id;
             
             if (!usuarioId || (!outroUsuarioId && tipo !== 'grupo') || !tipo) {
                 return res.json({ success: false, message: 'Dados insuficientes para criar conversa' });
@@ -219,7 +226,8 @@ class ChatController {
     // Buscar usuários para conversa
     static async searchUsers(req, res) {
         try {
-            const { termo, usuarioId } = req.query;
+            const { termo } = req.query;
+            const usuarioId = req.user?.id;
             
             if (!termo || !usuarioId) {
                 return res.json({ success: false, message: 'Termo de busca e ID do usuário são obrigatórios' });
@@ -248,7 +256,8 @@ class ChatController {
     // Enviar mensagem (com Pusher para tempo real)
     static async sendMessage(req, res) {
         try {
-            const { conversaId, usuarioId, conteudo } = req.body;
+            const { conversaId, conteudo } = req.body;
+            const usuarioId = req.user?.id;
             
             if (!conversaId || !usuarioId || !conteudo) {
                 return res.json({ success: false, message: 'Dados insuficientes para enviar mensagem' });
@@ -304,10 +313,21 @@ class ChatController {
     // Marcar mensagens como lidas
     static async markAsRead(req, res) {
         try {
-            const { conversaId, usuarioId } = req.body;
+            const { conversaId } = req.body;
+            const usuarioId = req.user?.id;
             
             if (!conversaId || !usuarioId) {
                 return res.json({ success: false, message: 'Dados insuficientes' });
+            }
+
+            // Verificar se o usuário é participante da conversa
+            const participante = await executeQuery(`
+                SELECT id FROM participantes_conversa
+                WHERE conversa_id = ? AND usuario_id = ? AND status = 'ativo'
+            `, [conversaId, usuarioId]);
+
+            if (participante.length === 0) {
+                return res.json({ success: false, message: 'Você não tem acesso a esta conversa' });
             }
             
             await executeQuery(`
@@ -333,7 +353,23 @@ class ChatController {
     // Notificar digitando
     static async typing(req, res) {
         try {
-            const { conversaId, usuarioId, usuarioNome } = req.body;
+            const { conversaId } = req.body;
+            const usuarioId = req.user?.id;
+            const usuarioNome = req.user?.nome;
+
+            if (!conversaId || !usuarioId) {
+                return res.json({ success: false });
+            }
+
+            // Verificar se o usuário é participante da conversa
+            const participante = await executeQuery(`
+                SELECT id FROM participantes_conversa
+                WHERE conversa_id = ? AND usuario_id = ? AND status = 'ativo'
+            `, [conversaId, usuarioId]);
+
+            if (participante.length === 0) {
+                return res.json({ success: false });
+            }
             
             await pusher.trigger(`chat-${conversaId}`, 'digitando', {
                 usuario_id: usuarioId,

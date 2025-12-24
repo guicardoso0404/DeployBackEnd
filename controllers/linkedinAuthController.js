@@ -1,6 +1,7 @@
 // Controller para autenticação com LinkedIn OAuth 2.0 v2
 const { executeQuery } = require('../db');
 const { getAvatarUrl } = require('../utils/cloudinaryService');
+const jwt = require('jsonwebtoken');
 
 const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
 
@@ -201,6 +202,10 @@ class LinkedInAuthController {
             
             // Remover senha da resposta
             delete user.senha;
+
+            if (!process.env.JWT_SECRET) {
+                return res.redirect(`${FRONTEND_URL}/html/login.html?error=jwt_not_configured`);
+            }
             
             // Gerar URL da foto de perfil se for um public_id do Cloudinary
             if (user.foto_perfil && !user.foto_perfil.startsWith('http')) {
@@ -208,12 +213,19 @@ class LinkedInAuthController {
             } else if (user.foto_perfil) {
                 user.foto_perfil_url = user.foto_perfil;
             }
+
+            const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+            const accessToken = jwt.sign(
+                { role: user.role || 'user' },
+                process.env.JWT_SECRET,
+                { subject: String(user.id), expiresIn }
+            );
             
             // Redirecionar para o frontend com os dados do usuário
             const userData = Buffer.from(JSON.stringify({
                 success: true,
                 message: 'Login com LinkedIn realizado com sucesso!',
-                data: { usuario: user }
+                data: { usuario: user, accessToken, tokenType: 'Bearer', expiresIn }
             })).toString('base64');
             
             res.redirect(`${FRONTEND_URL}/html/feed.html?auth=${userData}`);

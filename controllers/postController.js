@@ -1,12 +1,14 @@
 // 🦟👀
 const { executeQuery } = require('../db');
 const { uploadImage, getPostImageUrl, deleteFile } = require('../utils/cloudinaryService');
+const { ADMIN_EMAIL } = require('../middleware/auth');
 
 class PostController {
     // Criar postagem
     static async create(req, res) {
         try {
-            const { usuario_id, conteudo } = req.body;
+            const { conteudo } = req.body;
+            const usuario_id = req.user?.id;
             
             console.log('=== CRIANDO POSTAGEM ===');
             console.log('Usuario ID:', usuario_id);
@@ -122,7 +124,8 @@ class PostController {
     // Curtir postagem
     static async like(req, res) {
         try {
-            const { postagem_id, usuario_id } = req.body;
+            const { postagem_id } = req.body;
+            const usuario_id = req.user?.id;
             
             if (!postagem_id || !usuario_id) {
                 return res.json({ success: false, message: 'Postagem e usuário são obrigatórios' });
@@ -164,7 +167,8 @@ class PostController {
     // Comentar postagem
     static async comment(req, res) {
         try {
-            const { postagem_id, usuario_id, conteudo } = req.body;
+            const { postagem_id, conteudo } = req.body;
+            const usuario_id = req.user?.id;
             
             if (!postagem_id || !usuario_id || !conteudo) {
                 return res.json({ success: false, message: 'Todos os campos são obrigatórios' });
@@ -198,7 +202,7 @@ class PostController {
     static async delete(req, res) {
         try {
             const postId = req.params.id;
-            const { usuario_id } = req.body;
+            const usuario_id = req.user?.id;
             
             if (!postId || !usuario_id) {
                 return res.json({ success: false, message: 'Post ID e usuário são obrigatórios' });
@@ -206,19 +210,13 @@ class PostController {
             
             // Verificar se o usuário é o criador do post ou administrador
             const post = await executeQuery('SELECT * FROM postagens WHERE id = ?', [postId]);
-            const user = await executeQuery('SELECT * FROM usuarios WHERE id = ?', [usuario_id]);
             
             if (post.length === 0) {
                 return res.json({ success: false, message: 'Postagem não encontrada' });
             }
             
-            if (user.length === 0) {
-                return res.json({ success: false, message: 'Usuário não encontrado' });
-            }
-            
-            // Verificar se é o criador do post ou admin (email com "guilherme")
-            const isOwner = post[0].usuario_id === parseInt(usuario_id);
-            const isAdmin = user[0].email.includes('guilherme');
+            const isOwner = post[0].usuario_id === Number(usuario_id);
+            const isAdmin = req.user?.role === 'admin' || req.user?.email === ADMIN_EMAIL;
             
             if (!isOwner && !isAdmin) {
                 return res.json({ success: false, message: 'Você não tem permissão para deletar este post' });

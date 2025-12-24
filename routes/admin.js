@@ -2,10 +2,10 @@
 const express = require('express');
 const router = express.Router();
 const AdminController = require('../controllers/adminController');
-const { isAdmin } = require('../middleware/auth');
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
 // Todas as rotas de admin requerem privilégios de administrador
-router.use(isAdmin);
+router.use(isAuthenticated, isAdmin);
 
 // Estatísticas gerais
 router.get('/stats', AdminController.getStats);
