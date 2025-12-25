@@ -95,6 +95,8 @@ class LinkedInAuthController {
             
             const linkedinUser = await userResponse.json();
             
+            console.log('[DEBUG LinkedIn] Dados recebidos do userinfo:', JSON.stringify(linkedinUser, null, 2));
+
             if (!linkedinUser.sub) {
                 console.error('Dados do usuário não obtidos do LinkedIn:', linkedinUser);
                 return res.redirect(`${FRONTEND_URL}/html/login.html?error=no_user_data`);
@@ -114,6 +116,7 @@ class LinkedInAuthController {
             // Em alguns casos o userinfo não traz `picture`. Tenta fallback via API v2.
             if (!fotoPerfil) {
                 try {
+                    console.log('[DEBUG LinkedIn] Userinfo sem foto, tentando API v2/me...');
                     const meResponse = await fetch(
                         'https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))',
                         {
@@ -126,13 +129,19 @@ class LinkedInAuthController {
 
                     if (meResponse.ok) {
                         const meData = await meResponse.json();
+                        console.log('[DEBUG LinkedIn] Resposta da API v2/me:', JSON.stringify(meData, null, 2));
                         const elements = meData?.profilePicture?.['displayImage~']?.elements;
                         const best = Array.isArray(elements) ? elements[elements.length - 1] : null;
                         const identifier = best?.identifiers?.[0]?.identifier;
-                        if (identifier) fotoPerfil = identifier;
+                        if (identifier) {
+                            fotoPerfil = identifier;
+                            console.log(`[DEBUG LinkedIn] Foto encontrada via API v2/me: ${fotoPerfil}`);
+                        }
+                    } else {
+                        console.warn('[DEBUG LinkedIn] Falha ao buscar foto via API v2/me:', meResponse.status, await meResponse.text());
                     }
                 } catch (e) {
-                    // Ignora fallback se não tiver permissão/escopo
+                    console.error('[DEBUG LinkedIn] Erro no fallback da foto:', e);
                 }
             }
             
@@ -157,6 +166,7 @@ class LinkedInAuthController {
             if (existingUsers.length > 0) {
                 // Usuário já existe - fazer login
                 user = existingUsers[0];
+                console.log('[DEBUG LinkedIn] Usuário existente encontrado:', { id: user.id, email: user.email, foto_perfil_atual: user.foto_perfil });
                 
                 // Verificar se usuário está banido
                 if (user.status === 'banido') {
@@ -179,6 +189,7 @@ class LinkedInAuthController {
                 // Atualizar foto se o LinkedIn fornecer uma.
                 // Isso sobrepõe fotos antigas (ex: do Cloudinary) com a do LinkedIn.
                 if (fotoPerfil) {
+                    console.log(`[DEBUG LinkedIn] Atualizando foto para: ${fotoPerfil}`);
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [fotoPerfil, user.id]
@@ -190,6 +201,7 @@ class LinkedInAuthController {
                 
             } else {
                 // Usuário novo - criar conta
+                console.log('[DEBUG LinkedIn] Criando novo usuário com foto:', fotoPerfil);
                 let result;
                 try {
                     result = await executeQuery(`
@@ -235,6 +247,8 @@ class LinkedInAuthController {
             
             // Gerar URL da foto de perfil (Cloudinary public_id ou URL externa)
             user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
+            
+            console.log('[DEBUG LinkedIn] Objeto final do usuário antes de redirecionar:', JSON.stringify(user, null, 2));
 
             const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
             const accessToken = jwt.sign(

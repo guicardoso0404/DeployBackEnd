@@ -86,6 +86,8 @@ class GoogleAuthController {
             
             const googleUser = await userResponse.json();
             
+            console.log('[DEBUG Google] Dados recebidos do Google:', JSON.stringify(googleUser, null, 2));
+
             if (!googleUser.email) {
                 console.error('Email não obtido do Google');
                 return res.redirect(`${FRONTEND_URL}/html/login.html?error=no_email`);
@@ -118,7 +120,8 @@ class GoogleAuthController {
             if (existingUsers.length > 0) {
                 // Usuário já existe - fazer login
                 user = existingUsers[0];
-                
+                console.log('[DEBUG Google] Usuário existente encontrado:', { id: user.id, email: user.email, foto_perfil_atual: user.foto_perfil });
+
                 // Verificar se usuário está banido
                 if (user.status === 'banido') {
                     console.log('Login Google bloqueado - usuário banido:', user.email);
@@ -140,6 +143,7 @@ class GoogleAuthController {
                 // Atualizar foto se o Google fornecer uma.
                 // Isso sobrepõe fotos antigas (ex: do Cloudinary) com a do Google.
                 if (googleUser.picture) {
+                    console.log(`[DEBUG Google] Atualizando foto para: ${googleUser.picture}`);
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [googleUser.picture, user.id]
@@ -151,6 +155,7 @@ class GoogleAuthController {
                 
             } else {
                 // Usuário novo - criar conta
+                console.log('[DEBUG Google] Criando novo usuário com foto:', googleUser.picture);
                 let result;
                 try {
                     result = await executeQuery(`
@@ -196,6 +201,8 @@ class GoogleAuthController {
             
             // Gerar URL da foto de perfil (Cloudinary public_id ou URL externa)
             user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
+            
+            console.log('[DEBUG Google] Objeto final do usuário antes de redirecionar:', JSON.stringify(user, null, 2));
 
             const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
             const accessToken = jwt.sign(
