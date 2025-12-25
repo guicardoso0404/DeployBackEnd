@@ -1,7 +1,7 @@
 // 🦟👀
 // Controller para autenticação com Google OAuth 2.0
 const { executeQuery } = require('../db');
-const { getAvatarUrl } = require('../utils/cloudinaryService');
+const { resolveProfilePhotoUrl } = require('../utils/profilePhoto');
 const jwt = require('jsonwebtoken');
 
 // URLs de configuração
@@ -193,12 +193,8 @@ class GoogleAuthController {
                 return res.redirect(`${FRONTEND_URL}/html/login.html?error=jwt_not_configured`);
             }
             
-            // Gerar URL da foto de perfil se for um public_id do Cloudinary
-            if (user.foto_perfil && !user.foto_perfil.startsWith('http')) {
-                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
-            } else if (user.foto_perfil) {
-                user.foto_perfil_url = user.foto_perfil;
-            }
+            // Gerar URL da foto de perfil (Cloudinary public_id ou URL externa)
+            user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
 
             const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
             const accessToken = jwt.sign(

@@ -1,6 +1,6 @@
 // 🦟👀
 const { executeQuery } = require('../db');
-const { getAvatarUrl } = require('../utils/cloudinaryService');
+const { resolveProfilePhotoUrl } = require('../utils/profilePhoto');
 const jwt = require('jsonwebtoken');
 
 class AuthController {
@@ -78,10 +78,8 @@ class AuthController {
                 });
             }
             
-            // Gerar URL da foto de perfil se existir
-            if (user.foto_perfil) {
-                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
-            }
+            // Gerar URL da foto de perfil (Cloudinary public_id ou URL externa)
+            user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
 
             const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
             const accessToken = jwt.sign(

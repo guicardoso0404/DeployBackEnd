@@ -1,6 +1,7 @@
 // 🦟👀
 const { executeQuery } = require('../db');
 const { uploadImage, getPostImageUrl, deleteFile } = require('../utils/cloudinaryService');
+const { resolveProfilePhotoUrl } = require('../utils/profilePhoto');
 const { ADMIN_EMAIL } = require('../middleware/auth');
 
 class PostController {
@@ -88,9 +89,7 @@ class PostController {
                 }
                 
                 // Gerar URL otimizada do avatar do usuário se existir
-                if (post.foto_perfil) {
-                    post.foto_perfil_url = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,g_face,h_50,w_50,f_auto,q_auto/${post.foto_perfil}`;
-                }
+                post.foto_perfil_url = resolveProfilePhotoUrl(post.foto_perfil, 50);
                 
                 const comments = await executeQuery(`
                     SELECT 
@@ -105,9 +104,7 @@ class PostController {
                 
                 // Gerar URLs para comentários também
                 for (let comment of comments) {
-                    if (comment.foto_perfil) {
-                        comment.foto_perfil_url = `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/image/upload/c_fill,g_face,h_50,w_50,f_auto,q_auto/${comment.foto_perfil}`;
-                    }
+                    comment.foto_perfil_url = resolveProfilePhotoUrl(comment.foto_perfil, 50);
                 }
                 
                 post.comentarios_lista = comments;

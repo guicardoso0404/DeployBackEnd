@@ -1,6 +1,7 @@
 // 🦟👀
 const { executeQuery } = require('../db');
 const { uploadImage, getAvatarUrl, deleteFile } = require('../utils/cloudinaryService');
+const { resolveProfilePhotoUrl } = require('../utils/profilePhoto');
 
 class UserController {
     // Listar todos os usuários (para o painel admin)
@@ -23,9 +24,7 @@ class UserController {
             
             // Adicionar URL da foto de perfil
             users.forEach(user => {
-                if (user.foto_perfil) {
-                    user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
-                }
+                user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
             });
             
             res.json({
@@ -158,9 +157,7 @@ class UserController {
             const user = users[0];
             
             // Gerar URL otimizada do avatar se existir
-            if (user.foto_perfil) {
-                user.foto_perfil_url = getAvatarUrl(user.foto_perfil);
-            }
+            user.foto_perfil_url = resolveProfilePhotoUrl(user.foto_perfil);
             
             // Buscar posts do usuário
             const posts = await executeQuery(`
