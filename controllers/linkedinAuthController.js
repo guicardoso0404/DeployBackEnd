@@ -109,7 +109,32 @@ class LinkedInAuthController {
             const linkedinId = linkedinUser.sub;
             const email = linkedinUser.email;
             const nome = linkedinUser.name || linkedinUser.given_name || 'Usuário LinkedIn';
-            const fotoPerfil = linkedinUser.picture || null;
+            let fotoPerfil = linkedinUser.picture || null;
+
+            // Em alguns casos o userinfo não traz `picture`. Tenta fallback via API v2.
+            if (!fotoPerfil) {
+                try {
+                    const meResponse = await fetch(
+                        'https://api.linkedin.com/v2/me?projection=(profilePicture(displayImage~:playableStreams))',
+                        {
+                            headers: {
+                                'Authorization': `Bearer ${tokenData.access_token}`,
+                                'X-Restli-Protocol-Version': '2.0.0'
+                            }
+                        }
+                    );
+
+                    if (meResponse.ok) {
+                        const meData = await meResponse.json();
+                        const elements = meData?.profilePicture?.['displayImage~']?.elements;
+                        const best = Array.isArray(elements) ? elements[elements.length - 1] : null;
+                        const identifier = best?.identifiers?.[0]?.identifier;
+                        if (identifier) fotoPerfil = identifier;
+                    }
+                } catch (e) {
+                    // Ignora fallback se não tiver permissão/escopo
+                }
+            }
             
             // Verificar se usuário já existe no banco
             let user;
@@ -152,7 +177,7 @@ class LinkedInAuthController {
                 }
                 
                 // Atualizar foto se não tiver e o LinkedIn fornecer
-                if (!user.foto_perfil && fotoPerfil) {
+                if (fotoPerfil && (!user.foto_perfil || !String(user.foto_perfil).startsWith('http'))) {
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [fotoPerfil, user.id]

@@ -138,7 +138,7 @@ class GoogleAuthController {
                 }
                 
                 // Atualizar foto se não tiver e o Google fornecer
-                if (!user.foto_perfil && googleUser.picture) {
+                if (googleUser.picture && (!user.foto_perfil || !String(user.foto_perfil).startsWith('http'))) {
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [googleUser.picture, user.id]

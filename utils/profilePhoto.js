@@ -16,7 +16,10 @@ function resolveProfilePhotoUrl(foto_perfil, size = 200) {
     try {
         return getAvatarUrl(foto_perfil, size);
     } catch (e) {
-        return null;
+        const cloudName = process.env.CLOUDINARY_CLOUD_NAME;
+        if (!cloudName) return null;
+        const safeSize = Number.isFinite(Number(size)) ? Number(size) : 200;
+        return `https://res.cloudinary.com/${cloudName}/image/upload/c_fill,g_face,h_${safeSize},w_${safeSize},f_auto,q_auto/${foto_perfil}`;
     }
 }
 
