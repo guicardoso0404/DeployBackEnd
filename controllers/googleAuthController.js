@@ -137,8 +137,9 @@ class GoogleAuthController {
                     console.log('Não foi possível atualizar google_id:', e.message);
                 }
                 
-                // Atualizar foto se não tiver e o Google fornecer
-                if (googleUser.picture && (!user.foto_perfil || !String(user.foto_perfil).startsWith('http'))) {
+                // Atualizar foto se o Google fornecer uma.
+                // Isso sobrepõe fotos antigas (ex: do Cloudinary) com a do Google.
+                if (googleUser.picture) {
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [googleUser.picture, user.id]

@@ -176,8 +176,9 @@ class LinkedInAuthController {
                     console.log('Não foi possível atualizar linkedin_id:', e.message);
                 }
                 
-                // Atualizar foto se não tiver e o LinkedIn fornecer
-                if (fotoPerfil && (!user.foto_perfil || !String(user.foto_perfil).startsWith('http'))) {
+                // Atualizar foto se o LinkedIn fornecer uma.
+                // Isso sobrepõe fotos antigas (ex: do Cloudinary) com a do LinkedIn.
+                if (fotoPerfil) {
                     await executeQuery(
                         'UPDATE usuarios SET foto_perfil = ? WHERE id = ?',
                         [fotoPerfil, user.id]
