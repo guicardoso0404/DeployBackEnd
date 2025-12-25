@@ -8,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
 const GOOGLE_REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI || 'https://deploy-back-end-chi.vercel.app/api/auth/google/callback';
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-snowy.vercel.app';
 
 class GoogleAuthController {
     

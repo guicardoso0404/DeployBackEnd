@@ -3,7 +3,7 @@ const { executeQuery } = require('../db');
 const { getAvatarUrl } = require('../utils/cloudinaryService');
 const jwt = require('jsonwebtoken');
 
-const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-woad-nine.vercel.app';
+const FRONTEND_URL = process.env.FRONTEND_URL || 'https://deploy-frontend-snowy.vercel.app';
 
 class LinkedInAuthController {
     
