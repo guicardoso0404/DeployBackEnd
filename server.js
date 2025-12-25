@@ -35,7 +35,7 @@ const io = new Server(httpServer, {
             "http://127.0.0.1:3000",
             "http://networkup.local:3002",
             "http://networkup.local:3000",
-            "https://deploy-frontend-woad-nine.vercel.app",
+            "https://deploy-frontend-snowy.vercel.app",
             "https://deploy-back-end-chi.vercel.app"
         ],
         methods: ["GET", "POST"],
