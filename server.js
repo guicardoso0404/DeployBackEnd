@@ -12,6 +12,7 @@ console.log('=============================\n');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs/promises');
 const { createServer } = require('http');
 const { Server } = require('socket.io');
 const { connectDB, executeQuery } = require('./db');
@@ -127,6 +128,22 @@ app.get('/api/debug/env', (req, res) => {
         GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
         CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME ? 'CONFIGURADO' : 'NÃO CONFIGURADO'
     });
+});
+
+// Expor um .env EXEMPLO para o frontend (nunca exponha o .env real)
+app.get('/api/public/env-example', async (req, res) => {
+    try {
+        const envExamplePath = path.join(__dirname, '.env.example');
+        const content = await fs.readFile(envExamplePath, 'utf8');
+
+        res.setHeader('Cache-Control', 'no-store');
+        res.type('text/plain; charset=utf-8').send(content);
+    } catch (error) {
+        res.status(404).json({
+            success: false,
+            message: 'Arquivo .env.example não encontrado no servidor'
+        });
+    }
 });
 
 // Info da API
