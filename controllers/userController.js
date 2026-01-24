@@ -175,8 +175,8 @@ class UserController {
             res.json({
                 success: true,
                 data: {
-                    user: user,
-                    posts: posts,
+                    user,
+                    posts,
                     stats: {
                         total_posts: totalPosts[0].count
                     }
