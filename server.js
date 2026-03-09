@@ -31,12 +31,6 @@ const httpServer = createServer(app);
 const io = new Server(httpServer, {
     cors: {
         origin: [
-            "http://localhost:3002", 
-            "http://localhost:3000", 
-            "http://127.0.0.1:3002",
-            "http://127.0.0.1:3000",
-            "http://networkup.local:3002",
-            "http://networkup.local:3000",
             "https://deploy-frontend-snowy.vercel.app",
             "https://deploy-back-end-chi.vercel.app"
         ],
