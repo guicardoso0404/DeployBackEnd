@@ -1,3 +1,4 @@
+// 🦟👀
 // Controller de administração
 const { executeQuery } = require('../db');
 

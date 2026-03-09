@@ -1,3 +1,4 @@
+// 🦟👀
 // Middleware de autenticação e autorização
 const jwt = require('jsonwebtoken');
 const { executeQuery } = require('../db');

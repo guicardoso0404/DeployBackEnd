@@ -1,3 +1,4 @@
+// 🦟👀
 // Script temporário para listar usuários
 require('dotenv').config();
 const mysql = require('mysql2/promise');

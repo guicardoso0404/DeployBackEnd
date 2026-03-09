@@ -1,3 +1,4 @@
+// 🦟👀
 // Controller para autenticação com LinkedIn OAuth 2.0 v2
 const { executeQuery } = require('../db');
 const { resolveProfilePhotoUrl } = require('../utils/profilePhoto');

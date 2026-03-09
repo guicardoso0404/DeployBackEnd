@@ -1,3 +1,4 @@
+// 🦟👀
 require('dotenv').config()
 
 // Log para verificar se as variáveis de ambiente foram carregadas
